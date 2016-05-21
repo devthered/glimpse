@@ -12,17 +12,17 @@
 
 namespace glimpse 
 {
-  public:
     // Filters
     void Sharpen(Mat &input, Mat &output, int kernelSize, double strength);
-    public void Blur(Mat &input, Mat &output, int kernelSize);
+    void Blur(Mat &input, Mat &output, int kernelSize);
     void InvertColors(Mat &input, Mat &output);
+    void EqualizeHistogram(Mat &input, Mat &output);
 
     // Transformations
     void Translate(Mat &input, Mat &output, int offsetx, int offsety);
-    public void Rotate(Mat &input, Mat &output, float radians);
-    public void Scale(Mat &input, Mat &output, float scaleFactor);
-    public void Scale(Mat &input, Mat &output, float scaleFactorX, float scaleFactorY);
+    void Rotate(Mat &input, Mat &output, float radians);
+    void Scale(Mat &input, Mat &output, float scaleFactor);
+    void Scale(Mat &input, Mat &output, float scaleFactorX, float scaleFactorY);
 
     // Live Video Processing
     void LiveVideoCompare(double fps, void (*f)(Mat &, Mat &));

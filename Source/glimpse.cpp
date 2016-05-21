@@ -25,21 +25,22 @@ namespace glimpse
      ***********/
 
     // Sharpens an image with an unsharp mask subtraction technique.
-    public void Sharpen(Mat &input, Mat &output, int kernelSize, double strength)
+    void Sharpen(Mat &input, Mat &output, int kernelSize, double strength)
     {
         GaussianBlur(input, output, Size(0, 0), kernelSize, kernelSize);
         addWeighted(input, 1.5, output, -strength, 0, output);
     }
 
     // Gaussian Blurs an image symmetrically
-    public void SymmetricBlur(Mat &input, Mat &output, int kernelSize)
+    void SymmetricBlur(Mat &input, Mat &output, int kernelSize)
     {
         GaussianBlur(input, output, Size(0, 0), kernelSize, kernelSize);
     }
 
     // Inverts color values of 3 channel uchar image.
     // TODO: add support for all matrix types
-    public void InvertColors(Mat &input, Mat &output)
+    // TODO: use numpy to optimize
+    void InvertColors(Mat &input, Mat &output)
     {
         output = Mat::zeros(input.size(), input.type());
         
@@ -53,30 +54,93 @@ namespace glimpse
         }
     }
 
+    // Equalizes the histogram of a color or grayscale image,
+    // resolving problems with low-contrast, or very dark or washed-out images
+    void EqualizeHistogram(Mat &input, Mat &output)
+    {
+        if(input.channels() >= 3)
+        {
+            Mat ycrcb;
+            vector<Mat> channels;
+            cvtColor(input, ycrcb, CV_BGR2YCrCb);
+            split(ycrcb, channels);
+            equalizeHist(channels[0], channels[0]);
+            merge(channels, ycrcb);
+            cvtColor(ycrcb, output, CV_YCrCb2BGR);
+        }
+        else if (input.channels() == 1) 
+        {
+            equalizeHist(input, output);
+        }
+    }
+
+
     /*******************
      * Transformations *
      *******************/
 
     // Translates a matrix circularly by x and y offset values.
-    public void Translate(Mat &input, Mat &output, int offsetx, int offsety)
+    void Translate(Mat &input, Mat &output, int offsetx, int offsety)
     {
         Mat trans_mat = (Mat_<double>(2,3) << 1, 0, offsetx, 0, 1, offsety);
-        warpAffine(input,output,trans_mat,input.size());
+        warpAffine(input, output, trans_mat, input.size());
     }
 
-    public void Rotate(Mat &input, Mat &output, float radians)
+    // Rotates an image counterclockwise by a number of radians. Preserves the size of the original image.
+    // Rotates about center point on default.
+    void RotateRad(Mat &input, Mat &output, float radians)
     {
-        //TODO: implement
+        RotateRad(input, output, radians, input.cols / 2, input.rows / 2);
     }
 
-    public void Scale(Mat &input, Mat &output, float scaleFactor)
+    // Rotates an image counterclockwise by a number of radians around a given point. 
+    // Preserves the size of the original image. Center coordinates are in pixel coords.
+    void RotateRad(Mat &input, Mat &output, float radians, int centerX, int centerY)
+    {
+        Mat rotate_mat = getRotationMatrix2D(*new Point2f(centerX, centerY), (double)(radians * 180.0 / 3.1415926), 1);
+        warpAffine(input,test,rotate_mat,input.size());
+    }
+
+    // Rotates an image counterclockwise by a number of degrees. Preserves the size of the original image.
+    // Rotates about center point on default.
+    void RotateDeg(Mat &input, Mat &output, double degrees)
+    {
+        RotateDeg(input, output, degrees, input.cols / 2, input.rows / 2);
+    }
+
+    // Rotates an image counterclockwise by a number of degrees around a given point. 
+    // Preserves the size of the original image. Center coordinates are in pixel coords.
+    void RotateDeg(Mat &input, Mat &output, double degrees, int centerX, int centerY)
+    {
+        Mat rotate_mat = getRotationMatrix2D(*new Point2f(centerX, centerY), degrees, 1);
+        warpAffine(input,test,rotate_mat,input.size());
+    }
+
+    // Scales an image symmetrically by scaleFactor
+    void Scale(Mat &input, Mat &output, double scaleFactor)
     {
         Scale(input, output, scaleFactor, scaleFactor);
     }
 
-    public void Scale(Mat &input, Mat &output, float scaleFactorX, float scaleFactorY)
+    // Scales an image asymmetrically by x and y scale factors
+    void Scale(Mat &input, Mat &output, double scaleFactorX, double scaleFactorY)
     {
-        //TODO: implement
+        Mat scale_mat = (Mat_<double>(2,3) << scaleFactorX, 0, 0, 0, scaleFactorY, 0);
+        warpAffine(input, output, scale_mat, input.size());
+    }
+
+    // Shears an image in the x direction by shearFactor
+    void ShearX(Mat &input, Mat &output, double shearFactor)
+    {
+        Mat shear_mat = (Mat_<double>(2,3) << 1, shearFactor, 0, 0, 1, 0);
+        warpAffine(input, output, shear_mat, input.size());
+    }
+
+    // Shears an image in the x direction by shearFactor
+    void ShearY(Mat &input, Mat &output, double shearFactor)
+    {
+        Mat shear_mat = (Mat_<double>(2,3) << 1, 0, 0, shearFactor, 1, 0);
+        warpAffine(input, output, shear_mat, input.size());
     }
 
     /*******************************
@@ -88,7 +152,7 @@ namespace glimpse
     // This function is passed in as void (*f)(Mat &input, Mat &output), and is applied each frame to the new image coming in,
     // at a rate defined by int fps.
     // See wiki for usage examples.
-    public void LiveVideoCompare(double fps, void (*f)(Mat &, Mat &))
+    void LiveVideoCompare(double fps, void (*f)(Mat &, Mat &))
     {
         // Connect to webcam with VideoCapture object
         VideoCapture cap(0);
@@ -124,7 +188,7 @@ namespace glimpse
     // equivalent to the name of the corresponding constant.
     // This will tell the data type and number of channels of a Mat object.
     // for Mat m, call type2str(m.type());
-    public string type2str(int type)
+    string type2str(int type)
     {
         string r;
         
@@ -149,7 +213,7 @@ namespace glimpse
     }
 
     // For debugging only. Prints out the size and type of a given Mat object, passed by reference.
-    public void printmat(Mat &m)
+    void printmat(Mat &m)
     {
         string ty = type2str(m.type());
         printf("Matrix: %s %dx%d \n", ty.c_str(), m.cols, m.rows);

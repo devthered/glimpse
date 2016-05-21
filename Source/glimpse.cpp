@@ -25,18 +25,16 @@ namespace glimpse
      ***********/
 
     // Sharpens an image with an unsharp mask subtraction technique.
-    public void Sharpen(Mat &input, Mat &output, double strength)
+    public void Sharpen(Mat &input, Mat &output, int kernelSize, double strength)
     {
-        int kernelSize = 4;
         GaussianBlur(input, output, Size(0, 0), kernelSize, kernelSize);
         addWeighted(input, 1.5, output, -strength, 0, output);
     }
 
-    // Translates a matrix circularly by x and y offset values.
-    public void Translate(Mat &input, Mat &output, int offsetx, int offsety)
+    // Gaussian Blurs an image symmetrically
+    public void SymmetricBlur(Mat &input, Mat &output, int kernelSize)
     {
-        Mat trans_mat = (Mat_<double>(2,3) << 1, 0, offsetx, 0, 1, offsety);
-        warpAffine(input,output,trans_mat,input.size());
+        GaussianBlur(input, output, Size(0, 0), kernelSize, kernelSize);
     }
 
     // Inverts color values of 3 channel uchar image.
@@ -53,6 +51,32 @@ namespace glimpse
                 }
             }
         }
+    }
+
+    /*******************
+     * Transformations *
+     *******************/
+
+    // Translates a matrix circularly by x and y offset values.
+    public void Translate(Mat &input, Mat &output, int offsetx, int offsety)
+    {
+        Mat trans_mat = (Mat_<double>(2,3) << 1, 0, offsetx, 0, 1, offsety);
+        warpAffine(input,output,trans_mat,input.size());
+    }
+
+    public void Rotate(Mat &input, Mat &output, float radians)
+    {
+        //TODO: implement
+    }
+
+    public void Scale(Mat &input, Mat &output, float scaleFactor)
+    {
+        Scale(input, output, scaleFactor, scaleFactor);
+    }
+
+    public void Scale(Mat &input, Mat &output, float scaleFactorX, float scaleFactorY)
+    {
+        //TODO: implement
     }
 
     /*******************************

@@ -29,15 +29,20 @@ Translate(input, output, 10, 15);
 
 ##Quick Start
 
-Coming Soon!
+###Windows
+Coming soon!
+###Linux / Raspberry Pi
+Coming soon!
+###OSX
+Coming soon!
 
 ##Known Issues
 
-Glimpse is still in active development
+Glimpse is still in active development, and new features are on the way. Certain functions only support 8-bit unsigned char images, and support for floating-point images is in development.
 
 ##License
 
-As metioned earlier, Glimpse is licensed under the MIT License. The terms of
+As metioned above, Glimpse is licensed under the MIT License. The terms of
 the MIT license are included below:
 
 ```

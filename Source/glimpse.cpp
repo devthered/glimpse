@@ -86,18 +86,11 @@ namespace glimpse
         warpAffine(input, output, trans_mat, input.size());
     }
 
-    // Rotates an image counterclockwise by a number of radians. Preserves the size of the original image.
-    // Rotates about center point on default.
-    void RotateRad(Mat &input, Mat &output, float radians)
-    {
-        RotateRad(input, output, radians, input.cols / 2, input.rows / 2);
-    }
-
-    // Rotates an image counterclockwise by a number of radians around a given point. 
+    // Rotates an image counterclockwise by a number of degrees around a given point. 
     // Preserves the size of the original image. Center coordinates are in pixel coords.
-    void RotateRad(Mat &input, Mat &output, float radians, int centerX, int centerY)
+    void RotateDeg(Mat &input, Mat &output, double degrees, int centerX, int centerY)
     {
-        Mat rotate_mat = getRotationMatrix2D(*new Point2f(centerX, centerY), (double)(radians * 180.0 / 3.1415926), 1);
+        Mat rotate_mat = getRotationMatrix2D(*new Point2f(centerX, centerY), degrees, 1);
         warpAffine(input,test,rotate_mat,input.size());
     }
 
@@ -108,18 +101,19 @@ namespace glimpse
         RotateDeg(input, output, degrees, input.cols / 2, input.rows / 2);
     }
 
-    // Rotates an image counterclockwise by a number of degrees around a given point. 
+    // Rotates an image counterclockwise by a number of radians around a given point. 
     // Preserves the size of the original image. Center coordinates are in pixel coords.
-    void RotateDeg(Mat &input, Mat &output, double degrees, int centerX, int centerY)
+    void RotateRad(Mat &input, Mat &output, float radians, int centerX, int centerY)
     {
-        Mat rotate_mat = getRotationMatrix2D(*new Point2f(centerX, centerY), degrees, 1);
+        Mat rotate_mat = getRotationMatrix2D(*new Point2f(centerX, centerY), (double)(radians * 180.0 / 3.1415926), 1);
         warpAffine(input,test,rotate_mat,input.size());
     }
 
-    // Scales an image symmetrically by scaleFactor
-    void Scale(Mat &input, Mat &output, double scaleFactor)
+    // Rotates an image counterclockwise by a number of radians. Preserves the size of the original image.
+    // Rotates about center point on default.
+    void RotateRad(Mat &input, Mat &output, float radians)
     {
-        Scale(input, output, scaleFactor, scaleFactor);
+        RotateRad(input, output, radians, input.cols / 2, input.rows / 2);
     }
 
     // Scales an image asymmetrically by x and y scale factors
@@ -129,18 +123,29 @@ namespace glimpse
         warpAffine(input, output, scale_mat, input.size());
     }
 
+    // Scales an image symmetrically by scaleFactor
+    void Scale(Mat &input, Mat &output, double scaleFactor)
+    {
+        Scale(input, output, scaleFactor, scaleFactor);
+    }
+
+    // Shears an image in x and y directions
+    void Shear(Mat &input, Mat &output, double shearX, double shearY);
+    {
+        Mat shear_mat = (Mat_<double>(2,3) << 1, shearX, 0, shearY, 1, 0);
+        warpAffine(input, output, shear_mat, input.size());
+    }
+
     // Shears an image in the x direction by shearFactor
     void ShearX(Mat &input, Mat &output, double shearFactor)
     {
-        Mat shear_mat = (Mat_<double>(2,3) << 1, shearFactor, 0, 0, 1, 0);
-        warpAffine(input, output, shear_mat, input.size());
+        Shear(input, output, shearFactor, 0);
     }
 
     // Shears an image in the x direction by shearFactor
     void ShearY(Mat &input, Mat &output, double shearFactor)
     {
-        Mat shear_mat = (Mat_<double>(2,3) << 1, 0, 0, shearFactor, 1, 0);
-        warpAffine(input, output, shear_mat, input.size());
+        Shear(input, output, 0, shearFactor);
     }
 
     /*******************************

@@ -20,11 +20,17 @@ namespace glimpse
 
     // Transformations
     void Translate(Mat &input, Mat &output, int offsetx, int offsety);
-    void Rotate(Mat &input, Mat &output, float radians);
-    void Scale(Mat &input, Mat &output, float scaleFactor);
-    void Scale(Mat &input, Mat &output, float scaleFactorX, float scaleFactorY);
-
-    // Live Video Processing
+    void RotateDeg(Mat &input, Mat &output, double degrees, int centerX, int centerY);
+    void RotateDeg(Mat &input, Mat &output, double degrees);
+    void RotateRad(Mat &input, Mat &output, float radians, int centerX, int centerY);
+    void RotateRad(Mat &input, Mat &output, float radians);
+    void Scale(Mat &input, Mat &output, double scaleFactorX, double scaleFactorY);
+    void Scale(Mat &input, Mat &output, double scaleFactor);
+    void Shear(Mat &input, Mat &output, double shearX, double shearY);
+    void ShearX(Mat &input, Mat &output, double shearFactor);
+    void ShearY(Mat &input, Mat &output, double shearFactor);
+    
+    // Live Video Processing Tools
     void LiveVideoCompare(double fps, void (*f)(Mat &, Mat &));
 
     // Debugging Helper Functions

@@ -27,14 +27,28 @@ Mat output;
 Translate(input, output, 10, 15);
 ```
 
+##Live Video Processing
+Glimpse is useful for testing your own image processing alorithms in realtime. For example, to compare the processed and original video streams directly from your webcam, a user can define their own processing function:
+
+```C++
+void MyFilter(Mat &input, Mat &output)
+{
+  // process image
+  ...
+}
+```
+
+and have it run with a given framerate on their webcam video in a single line:
+
+```C++
+LiveVideoCompare(MyFilter);
+```
+
+This code will open up two windows, one streaming the original video and the other streaming the processed video.
+
 ##Quick Start
 
-###Windows
-Coming soon!
-###Linux / Raspberry Pi
-Coming soon!
-###OSX
-Coming soon!
+Glimpse source code is provided in the Source folder. Use the compiler of your choice to self-compile the library, or add the source code directly to your project.
 
 ##Known Issues
 

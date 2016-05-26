@@ -10,6 +10,8 @@
 #define GLIMPSE_HPP_
 #endif
 
+#include "opencv2/core/core.hpp"
+
 namespace glimpse 
 {
     // Filters
@@ -32,6 +34,7 @@ namespace glimpse
     
     // Live Video Processing Tools
     void LiveVideoCompare(double fps, void (*f)(Mat &, Mat &));
+    void LiveVideoCompare(void (*f)(Mat &, Mat &));
 
     // Debugging Helper Functions
     string type2str(int type);

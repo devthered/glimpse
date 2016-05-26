@@ -28,7 +28,7 @@ namespace glimpse
     void Sharpen(Mat &input, Mat &output, int kernelSize, double strength)
     {
         GaussianBlur(input, output, Size(0, 0), kernelSize, kernelSize);
-        addWeighted(input, 1.5, output, -strength, 0, output);
+        addWeighted(input, 1 + strength, output, -strength, 0, output);
     }
 
     // Gaussian Blurs an image symmetrically
@@ -91,7 +91,7 @@ namespace glimpse
     void RotateDeg(Mat &input, Mat &output, double degrees, int centerX, int centerY)
     {
         Mat rotate_mat = getRotationMatrix2D(*new Point2f(centerX, centerY), degrees, 1);
-        warpAffine(input,test,rotate_mat,input.size());
+        warpAffine(input, output, rotate_mat, input.size());
     }
 
     // Rotates an image counterclockwise by a number of degrees. Preserves the size of the original image.
@@ -106,7 +106,7 @@ namespace glimpse
     void RotateRad(Mat &input, Mat &output, float radians, int centerX, int centerY)
     {
         Mat rotate_mat = getRotationMatrix2D(*new Point2f(centerX, centerY), (double)(radians * 180.0 / 3.1415926), 1);
-        warpAffine(input,test,rotate_mat,input.size());
+        warpAffine(input, output, rotate_mat, input.size());
     }
 
     // Rotates an image counterclockwise by a number of radians. Preserves the size of the original image.
@@ -130,7 +130,7 @@ namespace glimpse
     }
 
     // Shears an image in x and y directions
-    void Shear(Mat &input, Mat &output, double shearX, double shearY);
+    void Shear(Mat &input, Mat &output, double shearX, double shearY)
     {
         Mat shear_mat = (Mat_<double>(2,3) << 1, shearX, 0, shearY, 1, 0);
         warpAffine(input, output, shear_mat, input.size());
@@ -181,8 +181,14 @@ namespace glimpse
             imshow("Processed", output);
             
             // Wait for frame delay, break out of video if ESC is pressed
-            if(waitKey(1000.0/FPS) == 27) break;
+            if(waitKey(1000.0/fps) == 27) break;
         }
+    }
+
+    // An overload with default framerate of 24 frames per second
+    void LiveVideoCompare(void (*f)(Mat &, Mat &))
+    {
+        LiveVideoCompare(24.0, f);
     }
 
     /******************************

@@ -36,6 +36,14 @@ namespace glimpse
     void LiveVideoCompare(double fps, void (*f)(Mat &, Mat &));
     void LiveVideoCompare(void (*f)(Mat &, Mat &));
 
+    // Seam Carving
+    void GradientSquaredEnergyMap(Mat &input, Mat &output);
+    float FindVerticalSeam(int* seam, Mat energyMap);
+    float FindHorizontalSeam(int* seam, Mat energyMap);
+    void RemoveVerticalSeams(Mat &input, Mat &output, int seamsToRemove);
+    void RemoveHorizontalSeams(Mat &input, Mat &output, int seamsToRemove);
+    void Retarget(Mat &input, Mat &output, int newWidth, int newHeight);
+
     // Debugging Helper Functions
     string type2str(int type);
     void printmat(Mat &m);

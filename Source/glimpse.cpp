@@ -191,6 +191,211 @@ namespace glimpse
         LiveVideoCompare(24.0, f);
     }
 
+    /****************
+     * Seam Carving *
+     ****************/
+
+     // Produces energy map for seam carving
+    void GradientSquaredEnergyMap(Mat &input, Mat &output)
+    {
+        Mat converted;
+        input.convertTo(converted, CV_32FC3, 1/255.0);
+        Mat trans1, trans2, temp;
+        Translate(converted, trans1, 1, 0);
+        Translate(converted, trans2, 0, 1);
+        absdiff(converted, trans1, temp);
+        absdiff(converted, trans2, converted);
+        add(converted, temp, converted);
+        converted.mul(converted);
+        cvtColor(converted, output, CV_RGB2GRAY);
+    }
+    
+    float FindVerticalSeam(int* seam, Mat energyMap)
+    {
+        Mat map = energyMap;
+        
+        int rows = map.rows;
+        int cols = map.cols;
+        
+        int *bestSeam = new int[rows];
+        int *currentSeam = new int[rows];
+        float lowestTotalEnergy, currentCost, totalCurrentCost;
+        int index;
+        lowestTotalEnergy = MAXFLOAT;
+        
+        for (int j = 0; j < cols; j++)
+        {
+            currentSeam[0] = j;
+            totalCurrentCost = 0;
+            for (int i = 1; i < rows; i++)
+            {
+                index = currentSeam[i-1];
+                currentCost = energyMap.at<float>(i, index);
+                currentSeam[i] = index;
+                
+                if (index > 2 && energyMap.at<float>(i, index-1) < currentCost)
+                {
+                    currentCost = energyMap.at<float>(i, index-1);
+                    currentSeam[i] = index-1;
+                }
+                
+                if (index < cols-1 && energyMap.at<float>(i, index+1) < currentCost)
+                {
+                    currentCost = energyMap.at<float>(i, index+1);
+                    currentSeam[i] = index+1;
+                }
+                
+                totalCurrentCost += currentCost;
+                if (totalCurrentCost > lowestTotalEnergy)
+                    break;
+            }
+            
+            if (totalCurrentCost < lowestTotalEnergy)
+            {
+                memcpy(bestSeam, currentSeam, sizeof(int) * rows);
+                lowestTotalEnergy = totalCurrentCost;
+            }
+        }
+        
+        memcpy(seam, bestSeam, sizeof(int) * rows);
+        return lowestTotalEnergy;
+    }
+    
+    float FindHorizontalSeam(int* seam, Mat energyMap)
+    {
+        Mat map = energyMap;
+        
+        int rows = map.rows;
+        int cols = map.cols;
+        
+        int *bestSeam = new int[cols];
+        int *currentSeam = new int[cols];
+        float lowestTotalEnergy, currentCost, totalCurrentCost;
+        int index;
+        lowestTotalEnergy = MAXFLOAT;
+        
+        for (int i = 0; i < rows; i++)
+        {
+            currentSeam[0] = i;
+            totalCurrentCost = 0;
+            for (int j = 1; j < cols; j++)
+            {
+                index = currentSeam[j-1];
+                currentCost = energyMap.at<float>(index, j);
+                currentSeam[j] = index;
+                
+                if (index > 2 && energyMap.at<float>(index-1, j) < currentCost)
+                {
+                    currentCost = energyMap.at<float>(index-1, j);
+                    currentSeam[j] = index-1;
+                }
+                
+                if (index < rows-1 && energyMap.at<float>(index+1, j) < currentCost)
+                {
+                    currentCost = energyMap.at<float>(index+1, j);
+                    currentSeam[j] = index+1;
+                }
+                
+                totalCurrentCost += currentCost;
+                if (totalCurrentCost > lowestTotalEnergy)
+                    break;
+            }
+            
+            if (totalCurrentCost < lowestTotalEnergy)
+            {
+                memcpy(bestSeam, currentSeam, sizeof(int) * cols);
+                lowestTotalEnergy = totalCurrentCost;
+            }
+        }
+        
+        memcpy(seam, bestSeam, sizeof(int) * cols);
+        return lowestTotalEnergy;
+    }
+    
+    void RemoveVerticalSeams(Mat &input, Mat &output, int seamsToRemove)
+    {
+        Mat energyMap, temp;
+        output = input.clone();
+        int rows = input.rows;
+        int cols = input.cols;
+        
+        for (int x = 0; x < seamsToRemove; x++)
+        {
+            int * seam = (int*)malloc(rows * sizeof(int));
+            GradientSquaredEnergyMap(output, energyMap);
+            FindVerticalSeam(seam, energyMap);
+            
+            temp = Mat::zeros(rows, cols-1, CV_8UC3);
+            for (int j = 0; j < rows; j++)
+            {
+                int index = seam[j];
+                for (int i = 0; i < index; i++)
+                    temp.at<Vec3b>(j, i) = output.at<Vec3b>(j, i);
+                
+                for (int i = index + 1; i < cols; i++)
+                    temp.at<Vec3b>(j, i-1) = output.at<Vec3b>(j, i);
+            }
+            
+            output = temp;
+            cols--;
+        }
+    }
+    
+    void RemoveHorizontalSeams(Mat &input, Mat &output, int seamsToRemove)
+    {
+        Mat energyMap, temp;
+        output = input.clone();
+        int rows = input.rows;
+        int cols = input.cols;
+        
+        for (int x = 0; x < seamsToRemove; x++)
+        {
+            int * seam = (int*)malloc(cols * sizeof(int));
+            GradientSquaredEnergyMap(output, energyMap);
+            FindHorizontalSeam(seam, energyMap);
+            
+            temp = Mat::zeros(rows-1, cols, CV_8UC3);
+            for (int i = 0; i < cols; i++)
+            {
+                int index = seam[i];
+                for (int j = 0; j < index; j++)
+                    temp.at<Vec3b>(j, i) = output.at<Vec3b>(j, i);
+                
+                for (int j = index + 1; j < rows; j++)
+                    temp.at<Vec3b>(j-1, i) = output.at<Vec3b>(j, i);
+            }
+            
+            output = temp;
+            rows--;
+        }
+    }
+    
+    void Retarget(Mat &input, Mat &output, int newWidth, int newHeight)
+    {
+        int rows = input.rows;
+        int cols = input.cols;
+        
+        float currentAspectRatio = (double)cols / rows;
+        float newAspectRatio = (double)newWidth / newHeight;
+        
+        if (newAspectRatio > currentAspectRatio) //make wider, remove horizontal seams
+        {
+            int rowsToRemove = rows - (int)(cols / newAspectRatio);
+            RemoveHorizontalSeams(input, output, rowsToRemove);
+            resize(output, output, Size(newWidth, newHeight));
+        }
+        else if (newAspectRatio < currentAspectRatio) //make taller, remove vertical seams
+        {
+            int colsToRemove = cols - (int)(rows * newAspectRatio);
+            RemoveVerticalSeams(input, output, colsToRemove);
+            resize(output, output, Size(newWidth, newHeight));
+        }
+        else //do not retarget, simply resize the image normally
+        {
+            resize(input, output, Size(newWidth, newHeight));
+        }
+    }
+
     /******************************
      * Debugging Helper Functions *
      ******************************/
